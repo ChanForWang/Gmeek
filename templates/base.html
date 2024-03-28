@@ -9,8 +9,8 @@
     <link rel="icon" href="{{ blogBase['faviconUrl'] }}">
 
     <!-- Music Player-->
-    <link href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
 
 
 
@@ -58,6 +58,8 @@
     <div id="aplayer"></div>
 
 </body>
+{% include 'music.html' %}
+
 <script>
     var IconList = {{IconList}};
 
@@ -108,10 +110,9 @@
         iframe.contentWindow.postMessage(message, 'https://utteranc.es');
     }
 
-    {% include 'music.html' %}
-
     console.log("\n %c Gmeek {{ blogBase['GMEEK_VERSION'] }} %c https://github.com/ChanForWang/Gmeek \n\n", "color: #fff; background-image: linear-gradient(90deg, rgb(47, 172, 178) 0%, rgb(45, 190, 96) 100%); padding:5px 1px;", "background-image: linear-gradient(90deg, rgb(45, 190, 96) 0%, rgb(255, 255, 255) 100%); padding:5px 0;");
 </script>
+
 {% block script %}{% endblock %} {{ blogBase['script'] }}
 
 </html>
