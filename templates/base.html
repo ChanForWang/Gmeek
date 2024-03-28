@@ -55,7 +55,8 @@
     <div id="content">{% block content %}{% endblock %}</div>
     <div id="footer">{% include 'footer.html' %}</div>
     <!-- Music Player-->
-    <div id="aplayer">{% include 'music.html' %}</div>
+    <div id="aplayer"></div>
+    {% include 'music.html' %}
 </body>
 <script>
     var IconList = {{IconList}};
