@@ -55,10 +55,10 @@
 <div class="markdown-body" id="postBody">{{ blogBase['postBody'] }}</div>
 
 <span>testing date:2024</span>
-{% for num in postListJson %}
-    <span>📅：</span>
-    <span class="PostTime">{{ postListJson[num]['createdDate'] }}</span>
-{% endfor %}
+
+<span>📅：</span>
+<span class="PostTime">{{ postCreatedAt }}</span>
+
 
 <div style="font-size:small;margin-top:8px;float:right;">{{ blogBase['bottomText'] }}</div>
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">{{ i18n['comments'] }}</button>

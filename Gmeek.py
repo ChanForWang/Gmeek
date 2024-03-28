@@ -103,6 +103,7 @@ class GMEEK():
         except requests.RequestException as e:
             raise Exception("markdown2html error: {}".format(e))
 
+
     def renderHtml(self,template,blogBase,postListJson,htmlDir,icon):
         file_loader = FileSystemLoader('templates')
         env = Environment(loader=file_loader)
@@ -132,6 +133,8 @@ class GMEEK():
         postBase["top"]=issue["top"]
         postBase["postSourceUrl"]=issue["postSourceUrl"]
         postBase["repoName"]=options.repo_name
+
+        postBase["postCreatedAt"]= issue["createdAt"]
         
         if "highlight" in post_body:
             postBase["highlight"]=1
@@ -144,7 +147,9 @@ class GMEEK():
         keys=['sun','moon','home','github']
         postIcon=dict(zip(keys, map(IconBase.get, keys)))
         self.renderHtml('post.html',postBase,{},issue["htmlDir"],postIcon)
+
         print("create postPage title=%s file=%s " % (issue["postTitle"],issue["htmlDir"]))
+
 
     def createPlistHtml(self):
         self.blogBase["postListJson"]=dict(sorted(self.blogBase["postListJson"].items(),key=lambda x:(x[1]["top"],x[1]["createdAt"]),reverse=True))#使列表由时间排序
