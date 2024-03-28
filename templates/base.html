@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html data-color-mode="light" data-dark-theme="{{ blogBase['nightTheme'] }}" data-light-theme="{{ blogBase['dayTheme'] }}" lang={% if blogBase[ 'i18n']=='CN' %} "zh-CN"{% elif blogBase[ 'i18n']=='RU' %} "ru"{% else -%} "en"{%- endif -%}>
+<html data-color-mode="light" data-dark-theme="{{ blogBase['nightTheme'] }}" data-light-theme="{{ blogBase['dayTheme'] }}" lang={% if blogBase[ 'i18n' ]=='CN' %} "zh-CN" {% elif blogBase[ 'i18n' ]=='RU' %} "ru" {% else -%} "en" {%- endif -%}>
 
 <head>
     <meta content="text/html; charset=utf-8" http-equiv="content-type" />
@@ -7,6 +7,13 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <link href="//cdn.staticfile.net/Primer/21.0.7/primer.css" rel="stylesheet" />
     <link rel="icon" href="{{ blogBase['faviconUrl'] }}">
+
+    <!-- Music Player-->
+    <link href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js"></script>
+
+
+
     <script>
         if (localStorage.getItem("meek_theme") == null) {} else if (localStorage.getItem("meek_theme") == "dark") {
             document.getElementsByTagName("html")[0].attributes.getNamedItem("data-color-mode").value = "dark";
@@ -47,13 +54,12 @@
     <div id="header">{% block header %}{% endblock %}</div>
     <div id="content">{% block content %}{% endblock %}</div>
     <div id="footer">{% include 'footer.html' %}</div>
+    <!-- Music Player-->
+    <div id="aplayer">{% include 'music.html' %}</div>
 </body>
 <script>
-    var IconList = {
-        {
-            IconList
-        }
-    };
+    var IconList = {{IconList}};
+
     var utterancesLoad = 0;
     if (localStorage.getItem("meek_theme") == null) {
         localStorage.setItem("meek_theme", "light");
