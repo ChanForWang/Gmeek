@@ -134,7 +134,7 @@ class GMEEK():
         postBase["postSourceUrl"]=issue["postSourceUrl"]
         postBase["repoName"]=options.repo_name
 
-        postBase["postCreatedAt"]= issue["createdAt"]
+        postBase["postCreatedAt"]=issue["createdAt"]
         
         if "highlight" in post_body:
             postBase["highlight"]=1
