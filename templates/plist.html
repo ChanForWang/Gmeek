@@ -70,6 +70,7 @@
 {% block content %}
 <div style="margin-bottom: 16px;">{{ blogBase['subTitle'] }}</div>
 <nav class="SideNav border">
+
 {% for num in postListJson -%}
 <a class="SideNav-item d-flex flex-items-center flex-justify-between" href="{{ postListJson[num]['postUrl']|e }}">
     <div class="d-flex flex-items-center">
@@ -84,6 +85,7 @@
     </div>
 </a>
 {%- endfor %}
+
 </nav>
 
 {%- if blogBase['prevUrl']!='disabled' or blogBase['nextUrl']!='disabled' -%}
