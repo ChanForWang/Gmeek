@@ -53,9 +53,12 @@
 
 {% block content %}
 <div class="markdown-body" id="postBody">{{ blogBase['postBody'] }}</div>
+
 {% for num in postListJson %}
-<span>📅：</span><span class="PostTime">{{ postListJson[num]['createdDate'] }}</span>
+<span>📅：</span>
+<span class="PostTime Label LabelTime">{{ postListJson[num]['createdDate'] }}</span>
 {% endfor %}
+
 <div style="font-size:small;margin-top:8px;float:right;">{{ blogBase['bottomText'] }}</div>
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">{{ i18n['comments'] }}</button>
 <div class="comments" id="comments"></div>
