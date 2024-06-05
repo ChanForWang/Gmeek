@@ -13,14 +13,12 @@
     <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
 
 
-
+    {%- if blogBase['themeMode']=='manual' -%}
     <script>
-        if (localStorage.getItem("meek_theme") == null) {} else if (localStorage.getItem("meek_theme") == "dark") {
-            document.getElementsByTagName("html")[0].attributes.getNamedItem("data-color-mode").value = "dark";
-        } else if (localStorage.getItem("meek_theme") == "light") {
-            document.getElementsByTagName("html")[0].attributes.getNamedItem("data-color-mode").value = "light";
-        }
+        let theme = localStorage.getItem("meek_theme") || "light";
+        document.documentElement.setAttribute("data-color-mode", theme);
     </script>
+    {%- endif -%}
     {% block head %}{% endblock %}
 </head>
 <style>
@@ -61,58 +59,36 @@
 {% include 'music.html' %}
 
 <script>
-    var IconList = {{IconList}};
-
-    var utterancesLoad = 0;
-    if (localStorage.getItem("meek_theme") == null) {
-        localStorage.setItem("meek_theme", "light");
-        changeLight();
-    } else if (localStorage.getItem("meek_theme") == "dark") {
-        changeDark();
-    } else if (localStorage.getItem("meek_theme") == "light") {
-        changeLight();
+var IconList={{ IconList }};
+var utterancesLoad=0;
+{% if blogBase['themeMode']=='manual' %}
+let themeSettings={
+    "dark": ["dark","moon","#00f0ff","dark-blue"],
+    "light": ["light","sun","#ff5000","github-light"],
+    "auto": ["auto","sync","","preferred-color-scheme"]
+};
+function changeTheme(mode, icon, color, utheme){
+    document.documentElement.setAttribute("data-color-mode",mode);
+    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
+    document.getElementById("themeSwitch").parentNode.style.color=color;
+    if(utterancesLoad==1){utterancesTheme(utheme);}
+}
+function modeSwitch(){
+    let currentMode=document.documentElement.getAttribute('data-color-mode');
+    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+    localStorage.setItem("meek_theme", newMode);
+    if(themeSettings[newMode]){
+        changeTheme(...themeSettings[newMode]);
     }
-
-    function changeDark() {
-        document.getElementsByTagName("html")[0].attributes.getNamedItem("data-color-mode").value = "dark";
-        document.getElementById("themeSwitch").setAttribute("d", value = IconList["moon"]);
-        document.getElementById("themeSwitch").parentNode.style.color = "#00f0ff";
-        if (utterancesLoad == 1) {
-            utterancesTheme("dark-blue");
-        }
-    }
-
-    function changeLight() {
-        document.getElementsByTagName("html")[0].attributes.getNamedItem("data-color-mode").value = "light";
-        document.getElementById("themeSwitch").setAttribute("d", value = IconList["sun"]);
-        document.getElementById("themeSwitch").parentNode.style.color = "#ff5000";
-        if (utterancesLoad == 1) {
-            utterancesTheme("github-light");
-        }
-    }
-
-    function modeSwitch() {
-        if (document.getElementsByTagName("html")[0].attributes[0].value == "light") {
-            changeDark();
-            localStorage.setItem("meek_theme", "dark");
-        } else {
-            changeLight();
-            localStorage.setItem("meek_theme", "light");
-        }
-    }
-
-    function utterancesTheme(theme) {
-        const message = {
-            type: 'set-theme',
-            theme: theme
-        };
-        const iframe = document.getElementsByClassName('utterances-frame')[0];
-        iframe.contentWindow.postMessage(message, 'https://utteranc.es');
-    }
-
-    console.log("\n %c Gmeek {{ blogBase['GMEEK_VERSION'] }} %c https://github.com/ChanForWang/Gmeek \n\n", "color: #fff; background-image: linear-gradient(90deg, rgb(47, 172, 178) 0%, rgb(45, 190, 96) 100%); padding:5px 1px;", "background-image: linear-gradient(90deg, rgb(45, 190, 96) 0%, rgb(255, 255, 255) 100%); padding:5px 0;");
+}
+function utterancesTheme(theme){
+    const message={type:'set-theme',theme: theme};
+    const iframe=document.getElementsByClassName('utterances-frame')[0];
+    iframe.contentWindow.postMessage(message,'https://utteranc.es');
+}
+if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
+{%- endif %}
+console.log("\n %c Gmeek {{ blogBase['GMEEK_VERSION'] }} https://github.com/ChanForWang/Gmeek \n\n","padding:5px 0;background:#02d81d;color:#fff");
 </script>
-
 {% block script %}{% endblock %} {{ blogBase['script'] }}
-
 </html>

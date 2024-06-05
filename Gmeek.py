@@ -8,11 +8,13 @@ import shutil
 import urllib
 import requests
 import argparse
+import html
 from github import Github
 from xpinyin import Pinyin
 from feedgen.feed import FeedGenerator
 from jinja2 import Environment, FileSystemLoader
 from transliterate import translit
+from collections import OrderedDict
 ######################################################################################
 i18n={"Search":"Search","switchTheme":"switch theme","home":"home","comments":"comments","run":"run ","days":" days","Previous":"Previous","Next":"Next"}
 i18nCN={"Search":"搜索","switchTheme":"切换主题","home":"首页","comments":"评论","run":"网站运行","days":"天","Previous":"上一页","Next":"下一页"}
@@ -27,7 +29,8 @@ IconBase={
     "rss":"M2.002 2.725a.75.75 0 0 1 .797-.699C8.79 2.42 13.58 7.21 13.974 13.201a.75.75 0 0 1-1.497.098 10.502 10.502 0 0 0-9.776-9.776.747.747 0 0 1-.7-.798ZM2.84 7.05h-.002a7.002 7.002 0 0 1 6.113 6.111.75.75 0 0 1-1.49.178 5.503 5.503 0 0 0-4.8-4.8.75.75 0 0 1 .179-1.489ZM2 13a1 1 0 1 1 2 0 1 1 0 0 1-2 0Z",
     "upload":"M2.75 14A1.75 1.75 0 0 1 1 12.25v-2.5a.75.75 0 0 1 1.5 0v2.5c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25v-2.5a.75.75 0 0 1 1.5 0v2.5A1.75 1.75 0 0 1 13.25 14Z M11.78 4.72a.749.749 0 1 1-1.06 1.06L8.75 3.811V9.5a.75.75 0 0 1-1.5 0V3.811L5.28 5.78a.749.749 0 1 1-1.06-1.06l3.25-3.25a.749.749 0 0 1 1.06 0l3.25 3.25Z",
     "github":"M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z",
-    "home":"M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z"
+    "home":"M6.906.664a1.749 1.749 0 0 1 2.187 0l5.25 4.2c.415.332.657.835.657 1.367v7.019A1.75 1.75 0 0 1 13.25 15h-3.5a.75.75 0 0 1-.75-.75V9H7v5.25a.75.75 0 0 1-.75.75h-3.5A1.75 1.75 0 0 1 1 13.25V6.23c0-.531.242-1.034.657-1.366l5.25-4.2Zm1.25 1.171a.25.25 0 0 0-.312 0l-5.25 4.2a.25.25 0 0 0-.094.196v7.019c0 .138.112.25.25.25H5.5V8.25a.75.75 0 0 1 .75-.75h3.5a.75.75 0 0 1 .75.75v5.25h2.75a.25.25 0 0 0 .25-.25V6.23a.25.25 0 0 0-.094-.195Z",
+    "sync":"M1.705 8.005a.75.75 0 0 1 .834.656 5.5 5.5 0 0 0 9.592 2.97l-1.204-1.204a.25.25 0 0 1 .177-.427h3.646a.25.25 0 0 1 .25.25v3.646a.25.25 0 0 1-.427.177l-1.38-1.38A7.002 7.002 0 0 1 1.05 8.84a.75.75 0 0 1 .656-.834ZM8 2.5a5.487 5.487 0 0 0-4.131 1.869l1.204 1.204A.25.25 0 0 1 4.896 6H1.25A.25.25 0 0 1 1 5.75V2.104a.25.25 0 0 1 .427-.177l1.38 1.38A7.002 7.002 0 0 1 14.95 7.16a.75.75 0 0 1-1.49.178A5.5 5.5 0 0 0 8 2.5Z"
 }
 ######################################################################################
 class GMEEK():
@@ -52,6 +55,13 @@ class GMEEK():
         self.defaultConfig()
 
     def cleanFile(self):
+        workspace_path = os.environ.get('GITHUB_WORKSPACE')
+        if os.path.exists(workspace_path+"/"+self.backup_dir):
+            shutil.rmtree(workspace_path+"/"+self.backup_dir)
+
+        if os.path.exists(workspace_path+"/"+self.root_dir):
+            shutil.rmtree(workspace_path+"/"+self.root_dir)
+
         if os.path.exists(self.backup_dir):
             shutil.rmtree(self.backup_dir)
             
@@ -63,19 +73,23 @@ class GMEEK():
         os.mkdir(self.post_dir)
 
     def defaultConfig(self):
-        dconfig={"singlePage":[],"startSite":"","filingNum":"","onePageListNum":15,"commentLabelColor":"#006b75","yearColorList":["#bc4c00", "#0969da", "#1f883d", "#A333D0"],"i18n":"CN","dayTheme":"light","nightTheme":"dark","urlMode":"pinyin","script":"","style":"","bottomText":"","showPostSource":1,"iconList":{},"UTC":+8}
+        dconfig={"singlePage":[],"startSite":"","filingNum":"","onePageListNum":15,"commentLabelColor":"#006b75","yearColorList":["#bc4c00", "#0969da", "#1f883d", "#A333D0"],"i18n":"CN","themeMode":"manual","dayTheme":"light","nightTheme":"dark","urlMode":"pinyin","script":"","style":"","indexScript":"","indexStyle":"","bottomText":"","showPostSource":1,"iconList":{},"UTC":+8,"rssSplit":"sentence","exlink":{}}
         config=json.loads(open('config.json', 'r', encoding='utf-8').read())
         self.blogBase={**dconfig,**config}.copy()
         self.blogBase["postListJson"]=json.loads('{}')
         self.blogBase["singeListJson"]=json.loads('{}')
+        self.blogBase["labelColorDict"]=self.labelColorDict
         if "displayTitle" not in self.blogBase:
             self.blogBase["displayTitle"]=self.blogBase["title"]
 
         if "faviconUrl" not in self.blogBase:
             self.blogBase["faviconUrl"]=self.blogBase["avatarUrl"]
 
+        if "ogImage" not in self.blogBase:
+            self.blogBase["ogImage"]=self.blogBase["avatarUrl"]
+
         if "homeUrl" not in self.blogBase:
-            if str(self.repo.name) == (str(self.repo.owner.login)+".github.io"):
+            if str(self.repo.name).lower() == (str(self.repo.owner.login) + ".github.io").lower():
                 self.blogBase["homeUrl"] = f"https://{self.repo.name}"
             else:
                 self.blogBase["homeUrl"] = f"https://{self.repo.owner.login}.github.io/{self.repo.name}"
@@ -114,7 +128,8 @@ class GMEEK():
         f.close()
 
     def createPostHtml(self,issue):
-        f = open("backup/"+issue["postTitle"]+".md", 'r', encoding='UTF-8')
+        mdFileName=re.sub(r'[<>:/\\|?*\"]|[\0-\31]', '-', issue["postTitle"])
+        f = open(self.backup_dir+mdFileName+".md", 'r', encoding='UTF-8')
         post_body=self.markdown2html(f.read())
         f.close()
 
@@ -123,9 +138,35 @@ class GMEEK():
         if '<math-renderer' in post_body:
             post_body=re.sub(r'<math-renderer.*?>','',post_body)
             post_body=re.sub(r'</math-renderer>','',post_body)
-            issue["script"]=issue["script"]+'<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>'
+            issue["script"]=issue["script"]+'<script>MathJax = {tex: {inlineMath: [["$", "$"]]}};</script><script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>'
+        
+        if '<p class="markdown-alert-title">' in post_body:
+            issue["style"]=issue["style"]+'<style>.markdown-alert{padding:0.5rem 1rem;margin-bottom:1rem;border-left:.25em solid var(--borderColor-default,var(--color-border-default));}.markdown-alert .markdown-alert-title {display:flex;font-weight:var(--base-text-weight-medium,500);align-items:center;line-height:1;}.markdown-alert>:first-child {margin-top:0;}.markdown-alert>:last-child {margin-bottom:0;}</style>'
+            alerts = {
+                'note': 'accent',
+                'tip': 'success',
+                'important': 'done',
+                'warning': 'attention',
+                'caution': 'danger'
+            }
+
+            for alert, style in alerts.items():
+                if f'markdown-alert-{alert}' in post_body:
+                    issue["style"] += (
+                        f'<style>.markdown-alert.markdown-alert-{alert} {{'
+                        f'border-left-color:var(--borderColor-{style}-emphasis, var(--color-{style}-emphasis));'
+                        f'background-color:var(--color-{style}-subtle);}}'
+                        f'.markdown-alert.markdown-alert-{alert} .markdown-alert-title {{'
+                        f'color: var(--fgColor-{style},var(--color-{style}-fg));}}</style>'
+                    )
+
+        if '<code class="notranslate">Gmeek-html' in post_body:
+            post_body = re.sub(r'<code class="notranslate">Gmeek-html(.*?)</code>', lambda match: html.unescape(match.group(1)), post_body, flags=re.DOTALL)
 
         postBase["postTitle"]=issue["postTitle"]
+        postBase["postUrl"]=self.blogBase["homeUrl"]+"/"+issue["postUrl"]
+        postBase["description"]=issue["description"]
+        postBase["ogImage"]=issue["ogImage"]
         postBase["postBody"]=post_body
         postBase["commentNum"]=issue["commentNum"]
         postBase["style"]=issue["style"]
@@ -140,10 +181,10 @@ class GMEEK():
         else:
             postBase["highlight"]=0
         
-        if issue["label"] in self.blogBase["singlePage"]:
+        if issue["labels"][0] in self.blogBase["singlePage"]:
             postBase["bottomText"]=''
 
-        keys=['sun','moon','home','github']
+        keys=['sun','moon','sync','home','github']
         postIcon=dict(zip(keys, map(IconBase.get, keys)))
         self.renderHtml('post.html',postBase,{},issue["htmlDir"],postIcon)
 
@@ -152,9 +193,9 @@ class GMEEK():
 
     def createPlistHtml(self):
         self.blogBase["postListJson"]=dict(sorted(self.blogBase["postListJson"].items(),key=lambda x:(x[1]["top"],x[1]["createdAt"]),reverse=True))#使列表由时间排序
-        keys=list(set(['sun','moon','search','rss','upload','post']+self.blogBase["singlePage"]))
+        keys=list(OrderedDict.fromkeys(['sun', 'moon','sync', 'search', 'rss', 'upload', 'post'] + self.blogBase["singlePage"]))
         plistIcon={**dict(zip(keys, map(IconBase.get, keys))),**self.blogBase["iconList"]}
-        keys=['sun','moon','home','search','post']
+        keys=['sun','moon','sync','home','search','post']
         tagIcon=dict(zip(keys, map(IconBase.get, keys)))
 
         postNum=len(self.blogBase["postListJson"])
@@ -217,10 +258,10 @@ class GMEEK():
 
         for num in self.blogBase["singeListJson"]:
             item=feed.add_item()
-            item.guid(self.blogBase["homeUrl"]+"/"+self.blogBase["singeListJson"][num]["label"]+".html",permalink=True)
+            item.guid(self.blogBase["homeUrl"]+"/"+self.blogBase["singeListJson"][num]["postUrl"],permalink=True)
             item.title(self.blogBase["singeListJson"][num]["postTitle"])
             item.description(self.blogBase["singeListJson"][num]["description"])
-            item.link(href=self.blogBase["homeUrl"]+"/"+self.blogBase["singeListJson"][num]["label"]+".html")
+            item.link(href=self.blogBase["homeUrl"]+"/"+self.blogBase["singeListJson"][num]["postUrl"])
             item.pubDate(time.strftime("%a, %d %b %Y %H:%M:%S +0000", time.gmtime(self.blogBase["singeListJson"][num]["createdAt"])))
 
         for num in self.blogBase["postListJson"]:
@@ -252,43 +293,39 @@ class GMEEK():
         feed.rss_file(self.root_dir+'rss.xml')
 
     def addOnePostJson(self,issue):
-        if len(issue.labels)==1:
+        if len(issue.labels)>=1:
             if issue.labels[0].name in self.blogBase["singlePage"]:
                 listJsonName='singeListJson'
-                gen_Html = self.root_dir+'{}.html'.format(issue.labels[0].name)
+                htmlFile='{}.html'.format(self.createFileName(issue,useLabel=True))
+                gen_Html = self.root_dir+htmlFile
             else:
                 listJsonName='postListJson'
-                if self.blogBase["urlMode"]=="issue":
-                    gen_Html = self.post_dir+'{}.html'.format(str(issue.number))
-                elif self.blogBase["urlMode"]=="ru_translit": 
-                    gen_Html = self.post_dir+'{}.html'.format(str(translit(issue.title, language_code='ru', reversed=True)).replace(' ', '-'))
-                else:
-                    gen_Html = self.post_dir+'{}.html'.format(Pinyin().get_pinyin(issue.title))
+                htmlFile='{}.html'.format(self.createFileName(issue))
+                gen_Html = self.post_dir+htmlFile
 
             postNum="P"+str(issue.number)
             self.blogBase[listJsonName][postNum]=json.loads('{}')
             self.blogBase[listJsonName][postNum]["htmlDir"]=gen_Html
-            self.blogBase[listJsonName][postNum]["label"]=issue.labels[0].name
-            self.blogBase[listJsonName][postNum]["labelColor"]=self.labelColorDict[issue.labels[0].name]
+            self.blogBase[listJsonName][postNum]["labels"]=[label.name for label in issue.labels]
+            # self.blogBase[listJsonName][postNum]["labelColor"]=self.labelColorDict[issue.labels[0].name]
             self.blogBase[listJsonName][postNum]["postTitle"]=issue.title
-            if self.blogBase["urlMode"]=="issue":
-                self.blogBase[listJsonName][postNum]["postUrl"]=urllib.parse.quote(self.post_folder+'{}.html'.format(str(issue.number)))
-            elif self.blogBase["urlMode"]=="ru_translit": 
-                self.blogBase[listJsonName][postNum]["postUrl"]=urllib.parse.quote(self.post_folder+'{}.html'.format(str(translit(issue.title, language_code='ru', reversed=True)).replace(' ', '-')))
-            else:
-                self.blogBase[listJsonName][postNum]["postUrl"]=urllib.parse.quote(self.post_folder+'{}.html'.format(Pinyin().get_pinyin(issue.title)))
+            self.blogBase[listJsonName][postNum]["postUrl"]=urllib.parse.quote(gen_Html[len(self.root_dir):])
+
             self.blogBase[listJsonName][postNum]["postSourceUrl"]="https://github.com/"+options.repo_name+"/issues/"+str(issue.number)
             self.blogBase[listJsonName][postNum]["commentNum"]=issue.get_comments().totalCount
             self.blogBase[listJsonName][postNum]["wordCount"]=len(issue.body)
-            if self.blogBase["i18n"]=="CN":
-                period="。"
-            else:
-                period="."
 
             if issue.body==None:
                 self.blogBase[listJsonName][postNum]["description"]=''
             else:
-                self.blogBase[listJsonName][postNum]["description"]=issue.body.split(period)[0]+period
+                if self.blogBase["rssSplit"]=="sentence":
+                    if self.blogBase["i18n"]=="CN":
+                        period="。"
+                    else:
+                        period="."
+                else:
+                    period=self.blogBase["rssSplit"]
+                self.blogBase[listJsonName][postNum]["description"]=issue.body.split(period)[0].replace("\"", "\'")+period
                 
             self.blogBase[listJsonName][postNum]["top"]=0
             for event in issue.get_events():
@@ -319,6 +356,10 @@ class GMEEK():
             else:
                 self.blogBase[listJsonName][postNum]["script"]=self.blogBase["script"]
 
+            if "ogImage" in postConfig:
+                self.blogBase[listJsonName][postNum]["ogImage"]=postConfig["ogImage"]
+            else:
+                self.blogBase[listJsonName][postNum]["ogImage"]=self.blogBase["ogImage"]
 
             thisTime=datetime.datetime.fromtimestamp(self.blogBase[listJsonName][postNum]["createdAt"])
             thisTime=thisTime.astimezone(self.TZ)
@@ -326,7 +367,8 @@ class GMEEK():
             self.blogBase[listJsonName][postNum]["createdDate"]=thisTime.strftime("%Y-%m-%d")
             self.blogBase[listJsonName][postNum]["dateLabelColor"]=self.blogBase["yearColorList"][int(thisYear)%len(self.blogBase["yearColorList"])]
 
-            f = open("backup/"+issue.title+".md", 'w', encoding='UTF-8')
+            mdFileName=re.sub(r'[<>:/\\|?*\"]|[\0-\31]', '-', issue.title)
+            f = open(self.backup_dir+mdFileName+".md", 'w', encoding='UTF-8')
             
             if issue.body==None:
                 f.write('')
@@ -362,6 +404,20 @@ class GMEEK():
         self.createFeedXml()
         print("====== create static html end ======")
 
+    def createFileName(self,issue,useLabel=False):
+        if useLabel==True:
+            fileName=issue.labels[0].name
+        else:
+            if self.blogBase["urlMode"]=="issue":
+                fileName=str(issue.number)
+            elif self.blogBase["urlMode"]=="ru_translit": 
+                fileName=str(translit(issue.title, language_code='ru', reversed=True)).replace(' ', '-')
+            else:
+                fileName=Pinyin().get_pinyin(issue.title)
+        
+        fileName=re.sub(r'[<>:/\\|?*\"]|[\0-\31]', '-', fileName)
+        return fileName
+
 ######################################################################################
 parser = argparse.ArgumentParser()
 parser.add_argument("github_token", help="github_token")
@@ -385,7 +441,10 @@ else:
     else:
         f=open("blogBase.json","r")
         print("blogBase is exists and issue_number!=0, runOne")
-        blog.blogBase=json.loads(f.read())
+        oldBlogBase=json.loads(f.read())
+        for key, value in oldBlogBase.items():
+            blog.blogBase[key] = value
+
         f.close()
         blog.runOne(options.issue_number)
 
@@ -405,6 +464,7 @@ for i in blog.blogBase["postListJson"]:
     del blog.blogBase["postListJson"][i]["script"]
     del blog.blogBase["postListJson"][i]["style"]
     del blog.blogBase["postListJson"][i]["top"]
+    del blog.blogBase["postListJson"][i]["ogImage"]
 
     if 'commentNum' in blog.blogBase["postListJson"][i]:
         commentNumSum=commentNumSum+blog.blogBase["postListJson"][i]["commentNum"]
@@ -414,6 +474,8 @@ for i in blog.blogBase["postListJson"]:
         wordCount=wordCount+blog.blogBase["postListJson"][i]["wordCount"]
         del blog.blogBase["postListJson"][i]["wordCount"]
 
+blog.blogBase["postListJson"]["labelColorDict"]=blog.labelColorDict
+
 docListFile=open(blog.root_dir+"postList.json","w")
 docListFile.write(json.dumps(blog.blogBase["postListJson"]))
 docListFile.close()
@@ -422,7 +484,7 @@ if os.environ.get('GITHUB_EVENT_NAME')!='schedule':
     print("====== update readme file ======")
     workspace_path = os.environ.get('GITHUB_WORKSPACE')
     readme="# %s :link: %s \r\n" % (blog.blogBase["title"],blog.blogBase["homeUrl"])
-    readme=readme+"### :page_facing_up: [%d](%s/tag.html) \r\n" % (len(blog.blogBase["postListJson"]),blog.blogBase["homeUrl"])
+    readme=readme+"### :page_facing_up: [%d](%s/tag.html) \r\n" % (len(blog.blogBase["postListJson"])-1,blog.blogBase["homeUrl"])
     readme=readme+"### :speech_balloon: %d \r\n" % commentNumSum
     readme=readme+"### :hibiscus: %d \r\n" % wordCount
     readme=readme+"### :alarm_clock: %s \r\n" % datetime.datetime.now(blog.TZ).strftime('%Y-%m-%d %H:%M:%S')
