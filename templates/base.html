@@ -55,9 +55,11 @@
 
 
 <body>
-    {% block music %}{% endblock %}
-    <div id="header">{% block header %}{% endblock %}</div>
-    <div id="content">{% block content %}{% endblock %}</div>
+    <div id="pjax-container">
+        <div id="header">{% block header %}{% endblock %}</div>
+        <div id="content">{% block content %}{% endblock %}</div>
+    </div>
+
     <div id="footer">{% include 'footer.html' %}</div>
 </body>
 
@@ -96,7 +98,7 @@ console.log("\n %c Gmeek {{ blogBase['GMEEK_VERSION'] }} https://github.com/Chan
 
 
 <!--Pjax-->
-if ($.support.pjax){
+if($.support.pjax){
     console.log('支持pjax');
     // 初始化Pjax
     $(document).pjax('a', '#pjax-container');

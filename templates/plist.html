@@ -42,16 +42,6 @@
 {% endblock %}
 
 
-{% block music %}
-    <!-- Music Player-->
-    <div id="aplayer"></div>
-{% endblock %}
-
-
-
-
-<div id="pjax-container">
-
 <!--Header区块-->
 {% block header %}
 <h1>
@@ -174,13 +164,9 @@ document.getElementById("{{ blogBase['singeListJson'][num]['postTitle'] }}").set
 {%- endfor %}
 </script>
 
-<!--添加aplayer的js，以html形式导入-->
-{% include 'music.html' %}
-
 {{ blogBase['indexScript'] }}
-
 
 {% endblock %}
 
-</div>
+
 
