@@ -1,11 +1,7 @@
 {% extends 'base.html' %}
 
-{% block music %}
-    <!-- Music Player-->
-    <div id="aplayer"></div>
-{% endblock %}
 
-<div id="pjax-container">
+
 {% block head %}
 <meta name="description" content="{{ blogBase['subTitle'] }}">
 <meta property="og:title" content="{{ blogBase['title'] }}">
@@ -14,8 +10,6 @@
 <meta property="og:url" content="{{ blogBase['homeUrl'] }}">
 <meta property="og:image" content="{{ blogBase['ogImage'] }}">
 <title>{{ blogBase['title'] }}</title>
-
-
 {% endblock %}
 
 
@@ -46,6 +40,17 @@
 </style>
 {{ blogBase['indexStyle'] }}
 {% endblock %}
+
+
+{% block music %}
+    <!-- Music Player-->
+    <div id="aplayer"></div>
+{% endblock %}
+
+
+
+
+<div id="pjax-container">
 
 <!--Header区块-->
 {% block header %}
@@ -145,6 +150,7 @@
 {%- endif %}
 {% endblock %}
 
+
 {% block script %}
 <script>
 document.getElementById("pathSearch").setAttribute("d",IconList["search"]);
@@ -166,13 +172,13 @@ document.getElementById("{{ key }}").setAttribute("d",value=IconList["{{ key }}"
 {% for num in blogBase['singeListJson'] -%}
 document.getElementById("{{ blogBase['singeListJson'][num]['postTitle'] }}").setAttribute("d",value=IconList["{{ blogBase['singeListJson'][num]['labels'][0] }}"]);
 {%- endfor %}
-
 </script>
 
 <!--添加aplayer的js，以html形式导入-->
 {% include 'music.html' %}
 
 {{ blogBase['indexScript'] }}
+
 
 {% endblock %}
 
