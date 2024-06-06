@@ -30,6 +30,8 @@
 {{ blogBase['style'] }}
 
 {% endblock %}
+
+<!--Header区块-->
 {% block header %}
 <h1 class="postTitle">{{ blogBase['postTitle'] }}</h1>
 <div class="title-right">
@@ -55,15 +57,15 @@
 </div>
 {% endblock %}
 
+<!--Content正文区块-->
 {% block content %}
 <div class="markdown-body" id="postBody">{{ blogBase['postBody'] }}</div>
 <span class="PostTime">📅{{ blogBase['createdDate'] }}</span>
-
-
 <div style="font-size:small;margin-top:8px;float:right;">{{ blogBase['bottomText'] }}</div>
 <button class="btn btn-block" type="button" onclick="openComments()" id="cmButton">{{ i18n['comments'] }}</button>
 <div class="comments" id="comments"></div>
 {% endblock %}
+
 
 {% block script %}
 <script>

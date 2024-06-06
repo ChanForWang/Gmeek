@@ -1,5 +1,12 @@
 {% extends 'base.html' %}
 
+{% block music %}
+    <!-- Music Player-->
+    <div id="aplayer"></div>
+{% endblock %}
+
+<div id="pjax-container">
+
 {% block head %}
 <meta name="description" content="{{ blogBase['subTitle'] }}">
 <meta property="og:title" content="{{ blogBase['title'] }}">
@@ -8,7 +15,12 @@
 <meta property="og:url" content="{{ blogBase['homeUrl'] }}">
 <meta property="og:image" content="{{ blogBase['ogImage'] }}">
 <title>{{ blogBase['title'] }}</title>
+
+<!-- Music Player-->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css">
+<script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
 {% endblock %}
+
 
 {% block style %}
 <style>
@@ -38,21 +50,25 @@
 {{ blogBase['indexStyle'] }}
 {% endblock %}
 
+<!--Header区块-->
 {% block header %}
 <h1>
     <img src="{{ blogBase['avatarUrl'] }}" class="avatar circle" id="avatarImg" alt="avatar">
-    {%- if blogBase['displayTitle']=='eekdai' -%}
-    <a class="blogTitle" href="https://meekdai.com">{{ blogBase['displayTitle'] }}</a>
+    {%- if blogBase['displayTitle']=='INDA HOUSE' -%}
+    <a class="blogTitle" href="https://chanforwang.github.io">{{ blogBase['displayTitle'] }}</a>
     {% else -%}
     <a class="blogTitle">{{ blogBase['displayTitle'] }}</a>
     {%- endif -%}
 </h1>
 <div class="title-right">
+    <!--搜索-->
     <a href="{{ blogBase['homeUrl'] }}/tag.html" id="buttonSearch" class="btn btn-invisible circle" title="{{ i18n['Search'] }}">
         <svg class="octicon" width="16" height="16" >
             <path id="pathSearch" fill-rule="evenodd"></path>
         </svg>
     </a>
+
+    <!--外链，我没有-->
     {% for key, value in blogBase['exlink'].items() -%}
     <a href="{{ value }}" class="btn btn-invisible circle" title="{{ key }}" target="_blank">
         <svg class="octicon" width="16" height="16" >
@@ -60,6 +76,8 @@
         </svg>
     </a>
     {%- endfor %}
+
+    <!--单页面，友情链接，我没有-->
     {% for num in blogBase['singeListJson'] -%}
     <a href="{{ blogBase['homeUrl'] }}/{{ blogBase['singeListJson'][num]['labels'][0] }}.html" class="btn btn-invisible circle" title="{{ blogBase['singeListJson'][num]['postTitle'] }}">
         <svg class="octicon" width="16" height="16" >
@@ -67,11 +85,15 @@
         </svg>
     </a>
     {%- endfor %}
+
+    <!--RSS订阅链-->
     <a href="{{ blogBase['homeUrl'] }}/rss.xml" target="_blank" id="buttonRSS" class="btn btn-invisible circle" title="RSS">
         <svg class="octicon" width="16" height="16" >
             <path id="pathRSS" fill-rule="evenodd"></path>
         </svg>
     </a>
+
+    <!--亮/黑装换-->
     <a class="btn btn-invisible circle" onclick="modeSwitch()" title="{{ i18n['switchTheme'] }}" {%- if blogBase['themeMode']=='fix' -%}style="display:none;"{%- endif -%}>
         <svg class="octicon" width="16" height="16" >
             <path id="themeSwitch" fill-rule="evenodd"></path>
@@ -80,10 +102,12 @@
 </div>
 {% endblock %}
 
+<!--Content文章列表区块-->
 {% block content %}
 <div style="margin-bottom: 16px;">{{ blogBase['subTitle'] }}</div>
 <nav class="SideNav border">
 
+<!--透过for loop来去获取每篇文章-->
 {% for num in postListJson -%}
 <a class="SideNav-item d-flex flex-items-center flex-justify-between" href="{{ postListJson[num]['postUrl']|e }}">
     <div class="d-flex flex-items-center">
@@ -103,6 +127,7 @@
 
 </nav>
 
+<!--上下页-->
 {%- if blogBase['prevUrl']!='disabled' or blogBase['nextUrl']!='disabled' -%}
 <nav class="paginate-container" aria-label="Pagination">
     <div class="pagination">
@@ -144,6 +169,24 @@ document.getElementById("{{ key }}").setAttribute("d",value=IconList["{{ key }}"
 {% for num in blogBase['singeListJson'] -%}
 document.getElementById("{{ blogBase['singeListJson'][num]['postTitle'] }}").setAttribute("d",value=IconList["{{ blogBase['singeListJson'][num]['labels'][0] }}"]);
 {%- endfor %}
+
+
+<!--添加aplayer的js，以html形式导入-->
+{% include 'music.html' %}
 </script>
+
 {{ blogBase['indexScript'] }}
+
+
+if ($.support.pjax){
+    console.log('支持pjax');
+    // 初始化Pjax
+    $(document).pjax('a', '#pjax-container');
+    }
+    else{
+        console.warn('不支持pjax')
+    };
+
 {% endblock %}
+
+</div>
