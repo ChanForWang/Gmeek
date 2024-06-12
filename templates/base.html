@@ -9,16 +9,15 @@
     <link rel="icon" href="{{ blogBase['faviconUrl'] }}">
 
     <!-- Music Player-->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script>
+    <link rel="stylesheet" href="APlayer.min.css">
+    <script src="APlayer.min.js"></script>
 
     {%- if blogBase['themeMode']=='manual' -%}
     <script>
         let theme = localStorage.getItem("meek_theme") || "light";
         document.documentElement.setAttribute("data-color-mode", theme);
     </script>
-    {%- endif -%}
-    {% block head %}{% endblock %}
+    {%- endif -%} {% block head %}{% endblock %}
 </head>
 <style>
     body {
@@ -58,36 +57,52 @@
 {% include 'music.html' %}
 
 <script>
-var IconList={{ IconList }};
-var utterancesLoad=0;
-{% if blogBase['themeMode']=='manual' %}
-let themeSettings={
-    "dark": ["dark","moon","#00f0ff","dark-blue"],
-    "light": ["light","sun","#ff5000","github-light"],
-    "auto": ["auto","sync","","preferred-color-scheme"]
-};
-function changeTheme(mode, icon, color, utheme){
-    document.documentElement.setAttribute("data-color-mode",mode);
-    document.getElementById("themeSwitch").setAttribute("d",value=IconList[icon]);
-    document.getElementById("themeSwitch").parentNode.style.color=color;
-    if(utterancesLoad==1){utterancesTheme(utheme);}
-}
-function modeSwitch(){
-    let currentMode=document.documentElement.getAttribute('data-color-mode');
-    let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
-    localStorage.setItem("meek_theme", newMode);
-    if(themeSettings[newMode]){
-        changeTheme(...themeSettings[newMode]);
+    var IconList = {
+        {
+            IconList
+        }
+    };
+    var utterancesLoad = 0; { %
+        if blogBase['themeMode'] == 'manual' %
     }
-}
-function utterancesTheme(theme){
-    const message={type:'set-theme',theme: theme};
-    const iframe=document.getElementsByClassName('utterances-frame')[0];
-    iframe.contentWindow.postMessage(message,'https://utteranc.es');
-}
-if(themeSettings[theme]){changeTheme(...themeSettings[theme]);}
-{%- endif %}
-console.log("\n %c Gmeek {{ blogBase['GMEEK_VERSION'] }} https://github.com/ChanForWang/Gmeek \n\n","padding:5px 0;background:#02d81d;color:#fff");
+    let themeSettings = {
+        "dark": ["dark", "moon", "#00f0ff", "dark-blue"],
+        "light": ["light", "sun", "#ff5000", "github-light"],
+        "auto": ["auto", "sync", "", "preferred-color-scheme"]
+    };
+
+    function changeTheme(mode, icon, color, utheme) {
+        document.documentElement.setAttribute("data-color-mode", mode);
+        document.getElementById("themeSwitch").setAttribute("d", value = IconList[icon]);
+        document.getElementById("themeSwitch").parentNode.style.color = color;
+        if (utterancesLoad == 1) {
+            utterancesTheme(utheme);
+        }
+    }
+
+    function modeSwitch() {
+        let currentMode = document.documentElement.getAttribute('data-color-mode');
+        let newMode = currentMode === "light" ? "dark" : currentMode === "dark" ? "auto" : "light";
+        localStorage.setItem("meek_theme", newMode);
+        if (themeSettings[newMode]) {
+            changeTheme(...themeSettings[newMode]);
+        }
+    }
+
+    function utterancesTheme(theme) {
+        const message = {
+            type: 'set-theme',
+            theme: theme
+        };
+        const iframe = document.getElementsByClassName('utterances-frame')[0];
+        iframe.contentWindow.postMessage(message, 'https://utteranc.es');
+    }
+    if (themeSettings[theme]) {
+        changeTheme(...themeSettings[theme]);
+    } { % -endif %
+    }
+    console.log("\n %c Gmeek {{ blogBase['GMEEK_VERSION'] }} https://github.com/ChanForWang/Gmeek \n\n", "padding:5px 0;background:#02d81d;color:#fff");
 </script>
 {% block script %}{% endblock %} {{ blogBase['script'] }}
+
 </html>
