@@ -42,6 +42,7 @@ class GMEEK():
         self.backup_dir='backup/'
         self.post_dir=self.root_dir+self.post_folder
 
+        # 初始化GitHub仓库和Feed生成器
         user = Github(self.options.github_token)
         self.repo = self.get_repo(user, options.repo_name)
         self.feed = FeedGenerator()
@@ -54,8 +55,11 @@ class GMEEK():
 
         self.defaultConfig()
 
+    # 清理文件方法
     def cleanFile(self):
         workspace_path = os.environ.get('GITHUB_WORKSPACE')
+
+        # 删除旧的备份目录和文章目录
         if os.path.exists(workspace_path+"/"+self.backup_dir):
             shutil.rmtree(workspace_path+"/"+self.backup_dir)
 
@@ -72,7 +76,9 @@ class GMEEK():
         os.mkdir(self.root_dir)
         os.mkdir(self.post_dir)
 
+    # 默认配置方法
     def defaultConfig(self):
+        # 设置博客的默认配置信息
         dconfig={"singlePage":[],"startSite":"","filingNum":"","onePageListNum":15,"commentLabelColor":"#006b75","yearColorList":["#bc4c00", "#0969da", "#1f883d", "#A333D0"],"i18n":"CN","themeMode":"manual","dayTheme":"light","nightTheme":"dark","urlMode":"pinyin","script":"","style":"","indexScript":"","indexStyle":"","bottomText":"","showPostSource":1,"iconList":{},"UTC":+8,"rssSplit":"sentence","exlink":{}}
         config=json.loads(open('config.json', 'r', encoding='utf-8').read())
         self.blogBase={**dconfig,**config}.copy()
@@ -104,9 +110,11 @@ class GMEEK():
         
         self.TZ=datetime.timezone(datetime.timedelta(hours=self.blogBase["UTC"]))
 
+    # 获取GitHub仓库的方法
     def get_repo(self,user:Github, repo:str):
         return user.get_repo(repo)
 
+    # Markdown转HTML方法
     def markdown2html(self, mdstr):
         payload = {"text": mdstr, "mode": "gfm"}
         headers = {"Authorization": "token {}".format(self.options.github_token)}
@@ -117,7 +125,7 @@ class GMEEK():
         except requests.RequestException as e:
             raise Exception("markdown2html error: {}".format(e))
 
-
+    # 渲染HTML方法,使用Jinja2模板引擎渲染HTML页面
     def renderHtml(self,template,blogBase,postListJson,htmlDir,icon):
         file_loader = FileSystemLoader('templates')
         env = Environment(loader=file_loader)
@@ -127,12 +135,12 @@ class GMEEK():
         f.write(output)
         f.close()
 
+    # 为单个文章生成HTML页面的方法
     def createPostHtml(self,issue):
-        mdFileName=re.sub(r'[<>:/\\|?*\"]|[\0-\31]', '-', issue["postTitle"])
-        f = open(self.backup_dir+mdFileName+".md", 'r', encoding='UTF-8')
+        mdFileName=re.sub(r'[<>:/\\|?*\"]|[\0-\31]', '-', issue["postTitle"]) # r'[<>:/\\|?*\"]|[\0-\31]这些是不被允许的标题符号，将被-替代
+        f = open(self.backup_dir+mdFileName+".md", 'r', encoding='UTF-8')  # 读取Markdown文件，转换为HTML，并生成文章页面
         post_body=self.markdown2html(f.read())
         f.close()
-
         postBase=self.blogBase.copy()
 
         if '<math-renderer' in post_body:
@@ -190,8 +198,9 @@ class GMEEK():
 
         print("create postPage title=%s file=%s " % (issue["postTitle"],issue["htmlDir"]))
 
-
+    # 生成文章列表页面的方法
     def createPlistHtml(self):
+        # 根据文章的创建时间排序，并生成文章列表页面
         self.blogBase["postListJson"]=dict(sorted(self.blogBase["postListJson"].items(),key=lambda x:(x[1]["top"],x[1]["createdAt"]),reverse=True))#使列表由时间排序
         keys=list(OrderedDict.fromkeys(['sun', 'moon','sync', 'search', 'rss', 'upload', 'post'] + self.blogBase["singlePage"]))
         plistIcon={**dict(zip(keys, map(IconBase.get, keys))),**self.blogBase["iconList"]}
@@ -244,6 +253,7 @@ class GMEEK():
         self.renderHtml('tag.html',self.blogBase,onePageList,self.root_dir+"tag.html",tagIcon)
         print("create tag.html")
 
+    # 生成RSS Feed的方法
     def createFeedXml(self):
         self.blogBase["postListJson"]=dict(sorted(self.blogBase["postListJson"].items(),key=lambda x:x[1]["createdAt"],reverse=False))#使列表由时间排序
         feed = FeedGenerator()
@@ -292,6 +302,7 @@ class GMEEK():
         print("====== create rss xml ======")
         feed.rss_file(self.root_dir+'rss.xml')
 
+    # 将issue转换为JSON格式的方法
     def addOnePostJson(self,issue):
         if len(issue.labels)>=1:
             if issue.labels[0].name in self.blogBase["singlePage"]:
@@ -303,6 +314,7 @@ class GMEEK():
                 htmlFile='{}.html'.format(self.createFileName(issue))
                 gen_Html = self.post_dir+htmlFile
 
+            # 将单个issue的信息添加到博客文章的JSON中
             postNum="P"+str(issue.number)
             self.blogBase[listJsonName][postNum]=json.loads('{}')
             self.blogBase[listJsonName][postNum]["htmlDir"]=gen_Html
@@ -377,7 +389,9 @@ class GMEEK():
             f.close()
             return listJsonName
 
+    # 生成整个博客网站的方法
     def runAll(self):
+        # 清理文件，生成所有文章页面，生成文章列表和RSS Feed
         print("====== start create static html ======")
         self.cleanFile()
 
@@ -395,7 +409,9 @@ class GMEEK():
         self.createFeedXml()
         print("====== create static html end ======")
 
+    # 为单个issue生成博客页面的方法
     def runOne(self,number_str):
+        # 根据issue编号生成单个文章页面，更新文章列表和RSS Feed
         print("====== start create static html ======")
         issue=self.repo.get_issue(int(number_str))
         listJsonName=self.addOnePostJson(issue)
@@ -404,7 +420,9 @@ class GMEEK():
         self.createFeedXml()
         print("====== create static html end ======")
 
+    # 生成文件名的方法
     def createFileName(self,issue,useLabel=False):
+        # 根据issue的信息生成文件名
         if useLabel==True:
             fileName=issue.labels[0].name
         else:
@@ -425,6 +443,7 @@ parser.add_argument("repo_name", help="repo_name")
 parser.add_argument("--issue_number", help="issue_number", default=0, required=False)
 options = parser.parse_args()
 
+# 创建GMEEK对象并执行
 blog=GMEEK(options)
 
 if not os.path.exists("blogBase.json"):
